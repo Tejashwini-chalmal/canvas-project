@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Paint App</title>
+    <style>
+        canvas {
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Simple Paint App</h1>
+    <canvas id="myCanvas" width="600" height="400"></canvas>
+    <button id="resetButton">Reset</button>
+    <script>
+        var canvas = document.getElementById('myCanvas');
+        var ctx = canvas.getContext('2d');
+        var isDrawing = false;
+        var circles = [];
+
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+        canvas.addEventListener('click', checkHit);
+        canvas.addEventListener('dblclick', deleteCircle);
+        document.getElementById('resetButton').addEventListener('click', clearCanvas);
+
+        function startDrawing(event) {
+            isDrawing = true;
+            var rect = canvas.getBoundingClientRect();
+            var x = event.clientX - rect.left;
+            var y = event.clientY - rect.top;
+            circles.push({
+                x: x,
+                y: y,
+                radius: 0,
+                color: getRandomColor()
+            });
+        }
+
+        function draw(event) {
+            if (!isDrawing) return;
+            var rect = canvas.getBoundingClientRect();
+            var mouseX = event.clientX - rect.left;
+            var mouseY = event.clientY - rect.top;
+            var currentCircle = circles[circles.length - 1];
+            currentCircle.radius = Math.sqrt(Math.pow(mouseX - currentCircle.x, 2) + Math.pow(mouseY - currentCircle.y, 2));
+            drawCircles();
+        }
+
+        function drawCircles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+            circles.forEach(function(circle) {
+                ctx.beginPath();
+                ctx.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2);
+                ctx.fillStyle = circle.color; // Set fill color
+                ctx.fill();
+                ctx.stroke();
+            });
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        function clearCanvas() {
+            circles = [];
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function getRandomColor() {
+            var letters = '0123456789ABCDEF';
+            var color = '#';
+            for (var i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        function checkHit(event) {
+            var rect = canvas.getBoundingClientRect();
+            var mouseX = event.clientX - rect.left;
+            var mouseY = event.clientY - rect.top;
+            var hit = false;
+            circles.forEach(function(circle) {
+                if (Math.sqrt(Math.pow(mouseX - circle.x, 2) + Math.pow(mouseY - circle.y, 2)) <= circle.radius) {
+                    hit = true;
+                }
+            });
+            if (hit) {
+                drawText("Hit", mouseX, mouseY);
+            } else {
+                drawText("Miss", mouseX, mouseY);
+            }
+        }
+
+        function deleteCircle(event) {
+            var rect = canvas.getBoundingClientRect();
+            var mouseX = event.clientX - rect.left;
+            var mouseY = event.clientY - rect.top;
+            for (var i = 0; i < circles.length; i++) {
+                var circle = circles[i];
+                if (Math.sqrt(Math.pow(mouseX - circle.x, 2) + Math.pow(mouseY - circle.y, 2)) <= circle.radius) {
+                    circles.splice(i, 1);
+                    drawCircles();
+                    break;
+                }
+            }
+        }
+
+        function drawText(text, x, y) {
+            ctx.fillStyle = "black";
+            ctx.font = "20px Arial";
+            ctx.fillText(text, x, y);
+        }
+    </script>
+</body>
+
+</html>
